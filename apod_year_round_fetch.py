@@ -63,6 +63,8 @@ def main():
     endDate = date.today()
 
     #This will be used to gather the JSON data and then write or append it to a file
+    #For now, we are just printing the dates to make sure we can get the correct format
+    #and that we are able to cycle through specified dates given.
     for dt in apiRangeDates(startDate, endDate):
         print(dt.strftime("%Y-%m-%d"))
 
