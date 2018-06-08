@@ -15,8 +15,6 @@
 
 # modules needed to process internet, json data, and dates
 from datetime import date
-from datetime import time
-from datetime import datetime
 from datetime import timedelta
 import urllib.request
 import json
@@ -46,13 +44,6 @@ def apiRangeDates(startDate, endDate):
 #############################################################################################################
 def main():
 
-    #This makes a variable that will be used to access the website in JSON format using our NASA public api key
-    #Note: if you do not have an api key, then go to https://api.nasa.gov/#live_example and simply apply for one.
-    #webUrl = urllib.request.urlopen("https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY")
-
-    #make a variable to check the character encoding
-    #charset = webUrl.info().get_param('charset', 'utf8')
-
     #This will the variables that will be needed.  For now, only the last 3 days will be gathered for simple
     #and debugging purposes
     lastYear = date.today().year
@@ -63,27 +54,31 @@ def main():
     endDate = date.today()
 
     #This will be used to gather the JSON data and then write or append it to a file
-    #For now, we are just printing the dates to make sure we can get the correct format
-    #and that we are able to cycle through specified dates given.
     for dt in apiRangeDates(startDate, endDate):
-        print(dt.strftime("%Y-%m-%d"))
 
-    # check if the code was able to connect to website by checking the result code.
-    # If it did, then read the data and write to file, else print the error code that it returned.
-    #if(webUrl.getcode() == 200):
+        # This makes a variable that will be used to access the website in JSON format using our NASA public api key
+        # Note: if you do not have an api key, then go to https://api.nasa.gov/#live_example and simply apply for one.
+        webUrl = urllib.request.urlopen("https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY&start_date="+str(startDate)+"&end_date="+str(endDate)+"")
 
-        #read the data, the data from the website is encoded in bytes
-    #    data = webUrl.read()
+        # make a variable to check the character encoding
+        charset = webUrl.info().get_param('charset', 'utf8')
 
-        #decode the character encoding and make an JSON object called my_JSON_object
-     #   my_JSON_object = json.loads(data.decode(charset))
+        # check if the code was able to connect to website by checking the result code.
+        # If it did, then read the data and write to file, else print the error code that it returned.
+        if(webUrl.getcode() == 200):
 
-        #create a file and write to it
-     #   with open("jsonData.txt", "w+") as outfile:
-     #       json.dump(my_JSON_object, outfile)
-    #else:
-        #print error code
-     #   print("Recieved error code: " + str(webUrl.getcode()))
+            #read the data, the data from the website is encoded in bytes
+            data = webUrl.read()
+
+            #decode the character encoding and make an JSON object called my_JSON_object
+            my_JSON_object = json.loads(data.decode(charset))
+
+            #create a file and write to it
+            with open("jsonData.txt", "w+") as outfile:
+                json.dump(my_JSON_object, outfile)
+        else:
+            #print error code
+            print("Recieved error code: " + str(webUrl.getcode()))
 
 #Run code to get the JSON data
 main()
