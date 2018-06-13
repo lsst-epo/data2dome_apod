@@ -56,26 +56,21 @@ def main():
     for dt in apiRangeDates(startDate, endDate):
 
 
-        # This makes a variable that will be used to access the website in JSON format using our NASA public api key
+         # This makes a variable that will be used to access the website in JSON format using our NASA public api key
         # Note: if you do not have an api key, then go to https://api.nasa.gov/#live_example and simply apply for one.
         webUrl = urllib.request.urlopen("https://api.nasa.gov/planetary/apod?api_key=vG9rkcvYOMDKqpaVsNFSAtxwDUx376rKiQbLNIqy&date="+str(dt))
 
-        # make a variable to check the character encoding
-        charset = webUrl.info().get_param('charset', 'utf8')
 
         # check if the code was able to connect to website by checking the result code.
         # If it did, then read the data and write to file, else print the error code that it returned.
         if(webUrl.getcode() == 200):
 
             #read
-            data = webUrl.read()
-
-            #decode the character encoding and make an JSON object called my_JSON_object
-            my_JSON_object = json.loads(data.decode(charset))
+            data = json.loads(webUrl.read().decode())
 
             #create a file and write to it
             with open("jsonData.txt", "a+") as outfile:
-                json.dump(my_JSON_object, outfile)
+                json.dump(data, outfile)
         else:
             print("Recieved error code: " + str(webUrl.getcode()))
 
