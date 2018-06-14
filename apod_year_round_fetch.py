@@ -35,6 +35,24 @@ def apiRangeDates(startDate, endDate):
         yield startDate + timedelta(n)
 
 #############################################################################################################
+# Method: isLeapYear                                                                                        #
+# Parameters: year                                                                                          #
+# Returns: True is year is a leap year or False if not                                                      #
+# Purpose: The purpose of this method is to check if a year is a Leap year or not                           #
+#############################################################################################################
+
+def isLeapYear(endDate):
+
+    if(endDate%400 == 0):
+        return True
+    elif(endDate%100 == 0):
+        return False
+    elif(endDate%4 == 0):
+        return True
+    else:
+        return False
+
+#############################################################################################################
 # Method: main()                                                                                            #
 # Parameters: NONE                                                                                          #
 # Returns: a JSON file containing one years worth of JSON data                                              #
@@ -49,14 +67,20 @@ def main():
     thisMonth = date.today().month
     thisDay = date.today().day
 
-    startDate = date(lastYear, thisMonth, thisDay)
     endDate = date.today()
 
+    #Check for Leap years
+    if(isLeapYear(endDate.year) and endDate.month == 2 and endDate.day == 29):
+        startDate = date(lastYear, thisMonth, thisDay -1)
+    else:
+        startDate = date(lastYear, thisMonth, thisDay)
+
+
     #This will be used to gather the JSON data and then write or append it to a file
-    for dt in apiRangeDates(startDate, endDate):
+    #for dt in apiRangeDates(startDate, endDate):
 
 
-         # This makes a variable that will be used to access the website in JSON format using our NASA public api key
+        # This makes a variable that will be used to access the website in JSON format using our NASA public api key
         # Note: if you do not have an api key, then go to https://api.nasa.gov/#live_example and simply apply for one.
         webUrl = urllib.request.urlopen("https://api.nasa.gov/planetary/apod?api_key=vG9rkcvYOMDKqpaVsNFSAtxwDUx376rKiQbLNIqy&date="+str(dt))
 
@@ -71,7 +95,7 @@ def main():
             #create a file and write to it
             with open("jsonData.txt", "a+") as outfile:
                 json.dump(data, outfile)
-        else:
+        #else:
             print("Recieved error code: " + str(webUrl.getcode()))
 
 #Run code to get the JSON data
