@@ -95,7 +95,7 @@ def main():
             #create a file and write to it
             with open("jsonData.txt", "a+") as outfile:
                 json.dump(data, outfile)
-        #else:
+        else:
             print("Recieved error code: " + str(webUrl.getcode()))
 
 #Run code to get the JSON data
