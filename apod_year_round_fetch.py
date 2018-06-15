@@ -63,9 +63,9 @@ def main():
 
     #This will the variables that will be needed.  For now, only the last 3 days will be gathered for simple
     #and debugging purposes
-    lastYear = date.today().year - 1
+    lastYear = date.today().year
     thisMonth = date.today().month
-    thisDay = date.today().day
+    thisDay = date.today().day -1
 
     endDate = date.today()
 
@@ -75,9 +75,10 @@ def main():
     else:
         startDate = date(lastYear, thisMonth, thisDay)
 
+    line = "{\n  \"apod\": [\n"
 
     #This will be used to gather the JSON data and then write or append it to a file
-    #for dt in apiRangeDates(startDate, endDate):
+    for dt in apiRangeDates(startDate, endDate):
 
 
         # This makes a variable that will be used to access the website in JSON format using our NASA public api key
@@ -95,8 +96,24 @@ def main():
             #create a file and write to it
             with open("jsonData.txt", "a+") as outfile:
                 json.dump(data, outfile)
+                if(dt != endDate):
+                    outfile.write(",")
         else:
             print("Recieved error code: " + str(webUrl.getcode()))
+
+    #lines that will be used after JSON is done
+    line = "{\n  \"apod\": [\n"
+    line2 = "\n  ]\n}"
+
+    #prepend line
+    with open('jsonData.txt', 'r+') as f:
+        file_data = f.read()
+        f.seek(0, 0)
+        f.write(line + file_data)
+
+    #append line2
+    f = open("jsonData.txt", "a+")
+    f.write(line2)
 
 #Run code to get the JSON data
 main()
