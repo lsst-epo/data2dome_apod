@@ -75,8 +75,6 @@ def main():
     else:
         startDate = date(lastYear, thisMonth, thisDay)
 
-    line = "{\n  \"apod\": [\n"
-
     #This will be used to gather the JSON data and then write or append it to a file
     for dt in apiRangeDates(startDate, endDate):
 
@@ -93,8 +91,15 @@ def main():
             #read
             data = json.loads(webUrl.read().decode())
 
+            #add json fields or python keys ReferanceURL, and PublicationDate and change url
+            #also delete hdurl
+            data["ReferenceURL"] = data["url"]
+            data["url"] = "https://apod.nasa.gov"
+            data["PublicationDate"] = str(dt)
+            del data['hdurl']
+
             #create a file and write to it
-            with open("jsonData.txt", "a+") as outfile:
+            with open("jsonData.json", "a+") as outfile:
                 json.dump(data, outfile)
                 if(dt != endDate):
                     outfile.write(",")
@@ -106,13 +111,13 @@ def main():
     line2 = "\n  ]\n}"
 
     #prepend line
-    with open('jsonData.txt', 'r+') as f:
+    with open('jsonData.json', 'r+') as f:
         file_data = f.read()
         f.seek(0, 0)
         f.write(line + file_data)
 
     #append line2
-    f = open("jsonData.txt", "a+")
+    f = open("jsonData.json", "a+")
     f.write(line2)
 
 #Run code to get the JSON data
