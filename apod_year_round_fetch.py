@@ -7,14 +7,13 @@
 #          python 3 and later versions.  If you need any earlier versions of python, be sure to import the  #
 #          correct libraries and modules.  Some of the methods from earlier modules might have to be changed#
 #          or renamed as well.  After the JSON data is collected, it will write it all to a file called     #
-#          jsonData.txt.  If you find any bugs or need help, feel free to email me.  There is currently one #
-#          bug in this code.  Making large request from one year to today will cause a 503 error, which is  #
-#          a service unavailable.  This means the request is to large for the server side to handle.        #
+#          jsonData.txt.  If you find any bugs or need help, feel free to email me.                         #
 #############################################################################################################
 
 # modules needed to process internet, json data, and dates
 from datetime import date
 from datetime import timedelta
+import datetime
 import urllib.request
 import json
 
@@ -61,7 +60,7 @@ def isLeapYear(endDate):
 #############################################################################################################
 def main():
 
-    #This will the variables that will be needed.  For now, only the last 3 days will be gathered for simple
+    #This will the variables that will be needed.  For now, only the last 2 days will be gathered for simple
     #and debugging purposes
     lastYear = date.today().year
     thisMonth = date.today().month
@@ -91,16 +90,21 @@ def main():
             #read
             data = json.loads(webUrl.read().decode())
 
+            #get the publication date, which is in ISO format
+            isoFormatDate = datetime.datetime.now().isoformat()
+
             #add json fields or python keys ReferanceURL, and PublicationDate and change url
             #also delete hdurl
             data["ReferenceURL"] = data["url"]
             data["url"] = "https://apod.nasa.gov"
-            data["PublicationDate"] = str(dt)
+            data["PublicationDate"] = str(isoFormatDate)
             del data['hdurl']
 
             #create a file and write to it
             with open("jsonData.json", "a+") as outfile:
                 json.dump(data, outfile)
+
+                #This makes sure not to write ',' for the last JSON object
                 if(dt != endDate):
                     outfile.write(",")
         else:
