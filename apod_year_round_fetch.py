@@ -78,12 +78,41 @@ def prepend(filename):
             "\"PostalCode\": \"49931\",\n" \
             "\"Country\": \"USA\"\n },\n\"Assets\": [\n"
 
-
     #prepend line
     with open(filename, 'r+') as f:
         file_data = f.read()
         f.seek(0, 0)
         f.write(line + file_data)
+
+#############################################################################################################
+# Method: getResouceImage                                                                                   #
+# Parameters: NA                                                                                            #
+# Returns: a dictionary                                                                                     #
+# Purpose: The purpose of this method is to return a dictionary object that contains information about      #
+#          a Image                                                                                          #
+#############################################################################################################
+def getResouceImage(data):
+    assets = {}
+    assets["ResourseType"] = "Original"
+    assets["MediaType"] = "Image"
+    assets["URL"] = data["url"]
+    assets["ProjectionType"] = "Tan"
+    return assets
+
+#############################################################################################################
+# Method: getResouceThumbnail                                                                               #
+# Parameters: NA                                                                                            #
+# Returns: a dictionary                                                                                     #
+# Purpose: The purpose of this method is to return a dictionary object that contains information about      #
+#          a thumbnail                                                                                      #
+#############################################################################################################
+def getResouceThumbnail(data, dt):
+    assets = {}
+    assets["ResourseType"] = "Thumbnail"
+    assets["MediaType"] = "Image"
+    assets["URL"] = "https://apod.nasa.gov/apod/calendar/S_" +str(dt.strftime("%y%m%d")) +".jpg"
+    assets["ProjectionType"] = "Tan"
+    return assets
 
 #############################################################################################################
 # Method: main()                                                                                            #
@@ -99,7 +128,7 @@ def main():
     #and debugging purposes
     lastYear = date.today().year
     thisMonth = date.today().month
-    thisDay = date.today().day -2
+    thisDay = date.today().day
     endDate = date.today()
 
     #Check for Leap years
@@ -119,32 +148,44 @@ def main():
         # If it did, then read the data and write to file, else print the error code that it returned.
         if(webUrl.getcode() == 200):
 
-            #read
+            #read and load JSON data from website
             data = json.loads(webUrl.read().decode())
 
-            #add json fields or python keys ReferanceURL, and PublicationDate and change url
-            #also delete hdurl
-            data["ReferenceURL"] = data["url"]
-            data["url"] = "https://apod.nasa.gov"
-            data["PublicationDate"] = str(datetime.datetime.now().isoformat())
-            del data['hdurl']
-            del data['date']
+            #create a new Dictionary to put JSON data in
+            new_data = {}
+            new_data["MediaType"] = data["media_type"]
+            new_data["Title"] = data["title"]
+            new_data["Description"] = data["explanation"]
+
+            #Check if key "copyright" exists b/c sometimes it doesn't
+            if data.get('copyright'):
+                new_data["Credit"] = data["copyright"]
+            else:
+                new_data["Credit"] = "https://apod.nasa.gov/"
+
+            new_data["PublicationDate"] = str(datetime.datetime.now().isoformat())
+
+            #This list is to collect resource data from image, gif, video, etc...
+            resources = []
+            resources.append(getResouceImage(data))
+            resources.append(getResouceThumbnail(data, dt))
+            resource_data = resources
+            new_data["Resources"] = resource_data
 
             #create a file and write to it
             with open("jsonData.json", "a+") as outfile:
-                json.dump(data, outfile)
+                json.dump(new_data, outfile)
                 if(dt != endDate):
                     outfile.write(",")
-        else:
-            print("Recieved error code: " + str(webUrl.getcode()))
 
-
+    #prepend JSON object
     prepend("jsonData.json")
 
-    #append line2
+    #append line to complete correct JSON data
     line = "\n  ] \n }] \n}"
     f = open("jsonData.json", "a+")
     f.write(line)
 
-#Run code to get the JSON data
-main()
+#Run the main program
+if __name__ == "__main__":
+    main()
