@@ -54,13 +54,15 @@ def isLeapYear(endDate):
         return False
 
 #############################################################################################################
-# Method: prepend                                                                                           #
-# Parameters: filename                                                                                      #
-# Returns: NA                                                                                               #
-# Purpose: The purpose of this method is to prepend the string line                                         #
+# Method: addMainJSON                                                                                       #
+# Parameters: NA                                                                                            #
+# Returns: a dictionary of JSON data                                                                        #
+# Purpose: The purpose of this method is to gather and stored JSON data                                     #
 #############################################################################################################
 def addMainJSON():
 
+    #new dictionary to store JSON data.  This first part is just information for data2dome and will
+    #generally not change.  If it needs updating, just change the value for the given key
     collections = {}
     collections["ID"] = "D2D_APOD"
     collections["URL"] = "http://www.data2dome.org/"
@@ -71,6 +73,7 @@ def addMainJSON():
     collections["Credit"] = "Robert Nemiroff and Jerry Bonnell"
     collections["Creator"] = "Robert Nemiroff and Jerry Bonnell"
 
+    #new dictionary for contact information
     contact_JSON = {}
     contact_JSON ["Name"] = "Robert Nemiroff"
     contact_JSON["Email"] = "nemiroff@mtu.edu"
@@ -88,14 +91,16 @@ def addMainJSON():
     return collections
 
 #############################################################################################################
-# Method: addAssets                                                                                           #
-# Parameters: filename                                                                                      #
-# Returns: NA                                                                                               #
-# Purpose: The purpose of this method is to prepend the string line                                         #
+# Method: addAssets                                                                                         #
+# Parameters: NA                                                                                            #
+# Returns: a list of assets of JSON data                                                                    #
+# Purpose: The purpose of this method is to collect JSON data, store it in a list and return the list       #
 #############################################################################################################
 def addAssets():
 
+    #list to store all the JSON data of Assets
     asset_list = []
+
     # This will the variables that will be needed.  For now, only the last 3 days will be gathered for simple
     # and debugging purposes
     lastYear = date.today().year
@@ -187,19 +192,20 @@ def getResouceThumbnail(data, dt):
 
 def main():
 
+    #This dictionary will collect all the JSON data and stored here
     main_JSON = {}
 
+    #Number sources where JSON was collected
     main_JSON["Count"] = 1
 
+    #This list will collect contact information and assets
     collections = []
     collections.append(addMainJSON())
-
     main_JSON["Collections"] = collections
 
+    #This creates a new file where JSON data will be stored
     with open("jsonData.json", "w+") as outfile:
        json.dump(main_JSON, outfile)
-
-    print(main_JSON)
 
 #Run the main program
 if __name__ == "__main__":
