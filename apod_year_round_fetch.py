@@ -59,30 +59,93 @@ def isLeapYear(endDate):
 # Returns: NA                                                                                               #
 # Purpose: The purpose of this method is to prepend the string line                                         #
 #############################################################################################################
-def prepend(filename):
+def addMainJSON():
 
-    #line that will be prepended
-    line = "{\n \"Count\": 1, \"Collections\": [{\n \"ID\": \"D2D_APOD\",\n \"URL\":" \
-            "\"http://www.data2dome.org/\", \n \"ReferenceURL\": \"https://apod.nasa.gov/\", \n" \
-            "\"Title\": \"Astronomy Picture of the Day\", \n \"Description\": " \
-            "\"The APOD archive contains the largest collection of annotated astronomical images on the internet.\",\n" \
-            "\"PublicationDate\": \"2018-06-14T14:00:00\",\n" \
-            "\"Credit\": \"Robert Nemiroff and Jerry Bonnell\",\n" \
-            "\"Creator\": \"Robert Nemiroff and Jerry Bonnell\",\n" \
-            "\"Contact\": {\n \"Name\": \"Robert Nemiroff\",\n" \
-            "\"Email\": \"nemiroff@mtu.edu\",\n" \
-            "\"Telephone\": \"1-906-487-2198\",\n" \
-            "\"Address\": \"1400 Townsend Drive\",\n" \
-            "\"City\": \"Houghton\",\n" \
-            "\"StateProvince\": \"Michigan\",\n" \
-            "\"PostalCode\": \"49931\",\n" \
-            "\"Country\": \"USA\"\n },\n\"Assets\": [\n"
+    collections = {}
+    collections["ID"] = "D2D_APOD"
+    collections["URL"] = "http://www.data2dome.org/"
+    collections["ReferenceURL"] = "https://apod.nasa.gov/"
+    collections["Title"] = "Astronomy Picture of the Day"
+    collections["Description"] = "The APOD archive contains the largest collection of annotated astronomical images on the internet."
+    collections["PublicationDate"] = "2018-06-14T14:00:00"
+    collections["Credit"] = "Robert Nemiroff and Jerry Bonnell"
+    collections["Creator"] = "Robert Nemiroff and Jerry Bonnell"
 
-    #prepend line
-    with open(filename, 'r+') as f:
-        file_data = f.read()
-        f.seek(0, 0)
-        f.write(line + file_data)
+    contact_JSON = {}
+    contact_JSON ["Name"] = "Robert Nemiroff"
+    contact_JSON["Email"] = "nemiroff@mtu.edu"
+    contact_JSON["Telephone"] = "1-906-487-2198"
+    contact_JSON["Address"] = "1400 Townsend Drive"
+    contact_JSON["City"] = "Houghton"
+    contact_JSON["StateProvince"] = "Michigan"
+    contact_JSON["PostalCode"] = "49931"
+    contact_JSON["Country"] = "USA"
+    collections["Contact"] = contact_JSON
+
+    #This will add the Assets lists to the collections list
+    collections["Assets"] = addAssets()
+
+    return collections
+
+#############################################################################################################
+# Method: addAssets                                                                                           #
+# Parameters: filename                                                                                      #
+# Returns: NA                                                                                               #
+# Purpose: The purpose of this method is to prepend the string line                                         #
+#############################################################################################################
+def addAssets():
+
+    asset_list = []
+    # This will the variables that will be needed.  For now, only the last 3 days will be gathered for simple
+    # and debugging purposes
+    lastYear = date.today().year
+    thisMonth = date.today().month
+    thisDay = date.today().day - 2
+    endDate = date.today()
+
+    # Check for Leap years
+    if(isLeapYear(endDate.year) and endDate.month == 2 and endDate.day == 29):
+      startDate = date(lastYear, thisMonth, thisDay -1)
+    else:
+      startDate = date(lastYear, thisMonth, thisDay)
+
+    #This will be used to gather the JSON data and then write or append it to a file
+    for dt in apiRangeDates(startDate, endDate):
+
+        #This makes a variable that will be used to access the website in JSON format using our NASA public api key
+        #Note: if you do not have an api key, then go to https://api.nasa.gov/#live_example and simply apply for one.
+        webUrl = urllib.request.urlopen("https://api.nasa.gov/planetary/apod?api_key=vG9rkcvYOMDKqpaVsNFSAtxwDUx376rKiQbLNIqy&date="+str(dt))
+
+        #check if the code was able to connect to website by checking the result code.
+        #If it did, then read the data and write to file, else print the error code that it returned.
+        if(webUrl.getcode() == 200):
+            #read and load JSON data from website
+            data = json.loads(webUrl.read().decode())
+
+            # create a new Dictionary to put JSON data in
+            new_data = {}
+            new_data["MediaType"] = data["media_type"]
+            new_data["Title"] = data["title"]
+            new_data["Description"] = data["explanation"]
+
+            #Check if key "copyright" exists b/c sometimes it doesn't
+            if data.get('copyright'):
+                new_data["Credit"] = data["copyright"]
+            else:
+                new_data["Credit"] = "https://apod.nasa.gov/"
+
+            new_data["PublicationDate"] = str(datetime.datetime.now().isoformat())
+
+            #This list is to collect resource data from image, gif, video, etc...
+            resources = []
+            resources.append(getResouceImage(data))
+            resources.append(getResouceThumbnail(data, dt))
+            resource_data = resources
+            new_data["Resources"] = resource_data
+
+            asset_list.append(new_data)
+
+    return asset_list
 
 #############################################################################################################
 # Method: getResouceImage                                                                                   #
@@ -124,67 +187,19 @@ def getResouceThumbnail(data, dt):
 
 def main():
 
-    #This will the variables that will be needed.  For now, only the last 3 days will be gathered for simple
-    #and debugging purposes
-    lastYear = date.today().year
-    thisMonth = date.today().month
-    thisDay = date.today().day
-    endDate = date.today()
+    main_JSON = {}
 
-    #Check for Leap years
-    if(isLeapYear(endDate.year) and endDate.month == 2 and endDate.day == 29):
-        startDate = date(lastYear, thisMonth, thisDay -1)
-    else:
-        startDate = date(lastYear, thisMonth, thisDay)
+    main_JSON["Count"] = 1
 
-    #This will be used to gather the JSON data and then write or append it to a file
-    for dt in apiRangeDates(startDate, endDate):
+    collections = []
+    collections.append(addMainJSON())
 
-        # This makes a variable that will be used to access the website in JSON format using our NASA public api key
-        # Note: if you do not have an api key, then go to https://api.nasa.gov/#live_example and simply apply for one.
-        webUrl = urllib.request.urlopen("https://api.nasa.gov/planetary/apod?api_key=vG9rkcvYOMDKqpaVsNFSAtxwDUx376rKiQbLNIqy&date="+str(dt))
+    main_JSON["Collections"] = collections
 
-        # check if the code was able to connect to website by checking the result code.
-        # If it did, then read the data and write to file, else print the error code that it returned.
-        if(webUrl.getcode() == 200):
+    with open("jsonData.json", "w+") as outfile:
+       json.dump(main_JSON, outfile)
 
-            #read and load JSON data from website
-            data = json.loads(webUrl.read().decode())
-
-            #create a new Dictionary to put JSON data in
-            new_data = {}
-            new_data["MediaType"] = data["media_type"]
-            new_data["Title"] = data["title"]
-            new_data["Description"] = data["explanation"]
-
-            #Check if key "copyright" exists b/c sometimes it doesn't
-            if data.get('copyright'):
-                new_data["Credit"] = data["copyright"]
-            else:
-                new_data["Credit"] = "https://apod.nasa.gov/"
-
-            new_data["PublicationDate"] = str(datetime.datetime.now().isoformat())
-
-            #This list is to collect resource data from image, gif, video, etc...
-            resources = []
-            resources.append(getResouceImage(data))
-            resources.append(getResouceThumbnail(data, dt))
-            resource_data = resources
-            new_data["Resources"] = resource_data
-
-            #create a file and write to it
-            with open("jsonData.json", "a+") as outfile:
-                json.dump(new_data, outfile)
-                if(dt != endDate):
-                    outfile.write(",")
-
-    #prepend JSON object
-    prepend("jsonData.json")
-
-    #append line to complete correct JSON data
-    line = "\n  ] \n }] \n}"
-    f = open("jsonData.json", "a+")
-    f.write(line)
+    print(main_JSON)
 
 #Run the main program
 if __name__ == "__main__":
