@@ -15,6 +15,8 @@
 # modules needed to process internet, json data, and dates
 from datetime import date
 from datetime import timedelta
+from PIL import Image, ImageFilter
+import io
 import datetime
 import urllib.request
 import json
@@ -105,7 +107,7 @@ def addAssets():
     # and debugging purposes
     lastYear = date.today().year
     thisMonth = date.today().month
-    thisDay = date.today().day - 2
+    thisDay = date.today().day 
     endDate = date.today()
 
     # Check for Leap years
@@ -117,6 +119,7 @@ def addAssets():
     #This will be used to gather the JSON data and then write or append it to a file
     for dt in apiRangeDates(startDate, endDate):
 
+        print(dt)
         #This makes a variable that will be used to access the website in JSON format using our NASA public api key
         #Note: if you do not have an api key, then go to https://api.nasa.gov/#live_example and simply apply for one.
         webUrl = urllib.request.urlopen("https://api.nasa.gov/planetary/apod?api_key=vG9rkcvYOMDKqpaVsNFSAtxwDUx376rKiQbLNIqy&date="+str(dt))
@@ -137,7 +140,7 @@ def addAssets():
             if data.get('copyright'):
                 new_data["Credit"] = data["copyright"]
             else:
-                new_data["Credit"] = "https://apod.nasa.gov/"
+                new_data["Credit"] = ""
 
             new_data["PublicationDate"] = str(datetime.datetime.now().isoformat())
 
@@ -162,8 +165,24 @@ def addAssets():
 def getResouceImage(data):
     assets = {}
     assets["ResourseType"] = "Original"
-    assets["MediaType"] = "Image"
-    assets["URL"] = data["url"]
+    assets["MediaType"] = data["media_type"]
+
+    #Read data from url
+    URL = data["url"]
+
+    if(data["media_type"] != "video"):
+        try:
+            #Get filesize and dimensions
+            with urllib.request.urlopen(URL) as url:
+                if (url.info()["Content-Type"] == "image/jpeg" or url.info()["Content-Type"] == "image/gif"):
+                    f = io.BytesIO(url.read())
+                    img = Image.open(f)
+                    assets["Filesize"] = url.info()["Content-Length"]
+                    assets["Dimensions"] = img.size
+        except urllib.error.URLError as e:
+            print(URL + " " +e.reason)
+
+    assets["URL"] = URL
     assets["ProjectionType"] = "Tan"
     return assets
 
@@ -178,7 +197,22 @@ def getResouceThumbnail(data, dt):
     assets = {}
     assets["ResourseType"] = "Thumbnail"
     assets["MediaType"] = "Image"
-    assets["URL"] = "https://apod.nasa.gov/apod/calendar/S_" +str(dt.strftime("%y%m%d")) +".jpg"
+
+    #Read data from url
+    URL = "https://apod.nasa.gov/apod/calendar/S_" +str(dt.strftime("%y%m%d")) +".jpg"
+
+    try:
+        #Get filesize and dimensions
+        with urllib.request.urlopen(URL) as url:
+            if (url.info()["Content-Type"] == "image/jpeg" or url.info()["Content-Type"] == "image/gif"):
+                f = io.BytesIO(url.read())
+                img = Image.open(f)
+                assets["Filesize"] = url.info()["Content-Length"]
+                assets["Dimensions"] = img.size
+    except urllib.error.URLError as e:
+        print(URL + " " +e.reason)
+
+    assets["URL"] = URL
     assets["ProjectionType"] = "Tan"
     return assets
 
