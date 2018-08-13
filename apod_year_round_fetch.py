@@ -15,7 +15,7 @@
 # modules needed to process internet, json data, and dates
 from datetime import date
 from datetime import timedelta
-from PIL import Image, ImageFilter
+from PIL import Image
 import io
 import datetime
 import urllib.request
@@ -105,9 +105,9 @@ def addAssets():
 
     # This will the variables that will be needed.  For now, only the last 3 days will be gathered for simple
     # and debugging purposes
-    lastYear = date.today().year
+    lastYear = date.today().year - 1
     thisMonth = date.today().month
-    thisDay = date.today().day 
+    thisDay = date.today().day
     endDate = date.today()
 
     # Check for Leap years
