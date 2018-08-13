@@ -78,8 +78,24 @@ def deleteOldJSON(data):
 def getResouceImage(data):
     assets = {}
     assets["ResourseType"] = "Original"
-    assets["MediaType"] = "Image"
-    assets["URL"] = data["url"]
+    assets["MediaType"] = data["media_type"]
+
+    #Read data from url
+    URL = data["url"]
+
+    if(data["media_type"] != "video"):
+        try:
+            #Get filesize and dimensions
+            with urllib.request.urlopen(URL) as url:
+                if (url.info()["Content-Type"] == "image/jpeg" or url.info()["Content-Type"] == "image/gif"):
+                    f = io.BytesIO(url.read())
+                    img = Image.open(f)
+                    assets["Filesize"] = url.info()["Content-Length"]
+                    assets["Dimensions"] = img.size
+        except urllib.error.URLError as e:
+            print(URL + " " +e.reason)
+
+    assets["URL"] = URL
     assets["ProjectionType"] = "Tan"
     return assets
 
@@ -94,7 +110,22 @@ def getResouceThumbnail(data, dt):
     assets = {}
     assets["ResourseType"] = "Thumbnail"
     assets["MediaType"] = "Image"
-    assets["URL"] = "https://apod.nasa.gov/apod/calendar/S_" +str(dt.strftime("%y%m%d")) +".jpg"
+
+    #Read data from url
+    URL = "https://apod.nasa.gov/apod/calendar/S_" +str(dt.strftime("%y%m%d")) +".jpg"
+
+    try:
+        #Get filesize and dimensions
+        with urllib.request.urlopen(URL) as url:
+            if (url.info()["Content-Type"] == "image/jpeg" or url.info()["Content-Type"] == "image/gif"):
+                f = io.BytesIO(url.read())
+                img = Image.open(f)
+                assets["Filesize"] = url.info()["Content-Length"]
+                assets["Dimensions"] = img.size
+    except urllib.error.URLError as e:
+        print(URL + " " +e.reason)
+
+    assets["URL"] = URL
     assets["ProjectionType"] = "Tan"
     return assets
 
