@@ -14,6 +14,8 @@
 
 # modules needed to process internet, json data, and dates
 from datetime import date
+from PIL import Image
+import io
 import datetime
 import urllib.request
 import json
@@ -162,5 +164,6 @@ def main():
             json.dump(data, f)
             f.truncate()
 
-#Run program
-main()
+#Run the main program
+if __name__ == "__main__":
+    main()
