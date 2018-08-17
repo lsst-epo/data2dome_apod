@@ -150,8 +150,10 @@ def main():
         #load JSON list into data
         data = json.load(f)
 
+        length = len(data["Collections"][0]["Assets"]) - 1
+
         # If the title of the new_data and data are the same then just return
-        if(new_data["title"] == data["Collections"][0]["Assets"][2]["Title"]):
+        if(new_data["title"] == data["Collections"][0]["Assets"][length]["Title"]):
             return
         else:
             #delete oldest JSON in the list
