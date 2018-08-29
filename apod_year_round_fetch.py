@@ -7,9 +7,7 @@
 #          python 3 and later versions.  If you need any earlier versions of python, be sure to import the  #
 #          correct libraries and modules.  Some of the methods from earlier modules might have to be changed#
 #          or renamed as well.  After the JSON data is collected, it will write it all to a file called     #
-#          jsonData.txt.  If you find any bugs or need help, feel free to email me.  There is currently one #
-#          bug in this code.  Making large request from one year to today will cause a 503 error, which is  #
-#          a service unavailable.  This means the request is to large for the server side to handle.        #
+#          jsonData.json.  If you find any bugs or need help, feel free to email me.                        #
 #############################################################################################################
 
 # modules needed to process internet, json data, and dates
