@@ -22,35 +22,71 @@ import json
 # Purpose: The purpose of this method is to add a new element to the end of the list                        #
 #############################################################################################################
 
-def addNew():
+def addNew(api_key):
+
+    dt = date.today()
 
     #get the newest element
-    webUrl = urllib.request.urlopen("https://api.nasa.gov/planetary/apod?api_key=vG9rkcvYOMDKqpaVsNFSAtxwDUx376rKiQbLNIqy&date="+str(date.today()))
+    webUrl = urllib.request.urlopen("https://api.nasa.gov/planetary/apod?api_key="+api_key+"&hd=true&date="+str(date.today()))
 
-    data = json.loads(webUrl.read().decode())
+    #new dictionary for collection
+    collection = {}
 
-    # create a new Dictionary to put JSON data in
-    new_data = {}
-    new_data["MediaType"] = data["media_type"]
-    new_data["Title"] = data["title"]
-    new_data["Description"] = data["explanation"]
+    #check if the code was able to connect to website by checking the result code.
+    #If it did, then read the data and write to file, else print the error code that it returned.
+    if(webUrl.getcode() == 200):
+        #read and load JSON data from website
+        data = json.loads(webUrl.read().decode())
 
-    # Check if key "copyright" exists b/c sometimes it doesn't
-    if data.get('copyright'):
-        new_data["Credit"] = data["copyright"]
-    else:
-        new_data["Credit"] = "https://apod.nasa.gov/"
+        collection["Creator"] = "Astronomy Picture of the Day"
+        collection["URL"] = "https://apod.nasa.gov/"
+        collection["ID"] = "ap" + str(dt.strftime("%y%m%d"))
+        collection["ReferenceURL"] = "https://apod.nasa.gov/apod/" + collection["ID"] + ".html"
+        collection["Title"] = data["title"]
+        collection["Description"] = data["explanation"]
+        collection["PublicationDate"] = str(dt.isoformat())
 
-    new_data["PublicationDate"] = str(datetime.datetime.now().isoformat())
+        #Check if key "copyright" exists b/c sometimes it doesn't
+        if data.get("copyright"):
+            collection["Credit"] = data["copyright"]
+        else:
+            collection["Credit"] = ""
 
-    # This list is to collect resource data from image, gif, video, etc...
-    resources = []
-    resources.append(getResouceImage(data))
-    resources.append(getResouceThumbnail(data, date.today()))
-    resource_data = resources
-    new_data["Resources"] = resource_data
+        #new dictionary for contact information
+        contact_JSON = {}
+        contact_JSON ["Name"] = "Robert Nemiroff"
+        contact_JSON["Email"] = "nemiroff@mtu.edu"
+        contact_JSON["Telephone"] = "1-906-487-2198"
+        contact_JSON["Address"] = "1400 Townsend Drive"
+        contact_JSON["City"] = "Houghton"
+        contact_JSON["StateProvince"] = "Michigan"
+        contact_JSON["PostalCode"] = "49931"
+        contact_JSON["Country"] = "USA"
+        collection["Contact"] = contact_JSON
 
-    return new_data
+        #list to store all the JSON data of Assets
+        assets = []
+
+        # create a new Dictionary to put asset JSON data in
+        asset = {}
+        asset["MediaType"] = str(data["media_type"]).title()
+
+        #This list is to collect resource data from image, gif, video, etc...
+        resources = []
+
+        if data.get("hdurl"):
+            resources.append(getResouceImage(data, dt, "Original"))
+
+        resources.append(getResouceImage(data, dt, "Small"))
+        resources.append(getResouceImage(data, dt, "Thumbnail"))
+        resource_data = resources
+        asset["Resources"] = resource_data
+
+        assets.append(asset)
+
+        collection["Assets"] = assets
+
+    return collection
 
 #############################################################################################################
 # Method: deleteOldJSON                                                                                     #
@@ -62,7 +98,7 @@ def addNew():
 def deleteOldJSON(data):
 
     #Delete the oldest element in the list
-    del data["Collections"][0]["Assets"][0]
+    del data["Collections"][0]
     return data
 
 #############################################################################################################
@@ -72,14 +108,21 @@ def deleteOldJSON(data):
 # Purpose: The purpose of this method is to return a dictionary object that contains information about      #
 #          a Image                                                                                          #
 #############################################################################################################
-def getResouceImage(data):
-    assets = {}
-    assets["ResourseType"] = "Original"
-    assets["MediaType"] = data["media_type"]
+def getResouceImage(data, dt, type):
+    resource = {}
+    resource["MediaType"] = str(data["media_type"]).title()
+    resource["ResourceType"] = type
+
+    if(type == "Original"):
+        URL = data["hdurl"]
+    elif(type == "Small"):
+        URL = data["url"]
+    elif(type == "Thumbnail"):
+        URL = "https://apod.nasa.gov/apod/calendar/S_" +str(dt.strftime("%y%m%d")) +".jpg"
+    else:
+        URL = ""
 
     #Read data from url
-    URL = data["url"]
-
     if(data["media_type"] != "video"):
         try:
             #Get filesize and dimensions
@@ -87,44 +130,14 @@ def getResouceImage(data):
                 if (url.info()["Content-Type"] == "image/jpeg" or url.info()["Content-Type"] == "image/gif"):
                     f = io.BytesIO(url.read())
                     img = Image.open(f)
-                    assets["Filesize"] = url.info()["Content-Length"]
-                    assets["Dimensions"] = img.size
+                    resource["Filesize"] = int(url.info()["Content-Length"])
+                    resource["Dimensions"] = img.size
         except urllib.error.URLError as e:
             print(URL + " " +e.reason)
 
-    assets["URL"] = URL
-    assets["ProjectionType"] = "Tan"
-    return assets
-
-#############################################################################################################
-# Method: getResouceThumbnail                                                                               #
-# Parameters: NA                                                                                            #
-# Returns: a dictionary                                                                                     #
-# Purpose: The purpose of this method is to return a dictionary object that contains information about      #
-#          a thumbnail                                                                                      #
-#############################################################################################################
-def getResouceThumbnail(data, dt):
-    assets = {}
-    assets["ResourseType"] = "Thumbnail"
-    assets["MediaType"] = "Image"
-
-    #Read data from url
-    URL = "https://apod.nasa.gov/apod/calendar/S_" +str(dt.strftime("%y%m%d")) +".jpg"
-
-    try:
-        #Get filesize and dimensions
-        with urllib.request.urlopen(URL) as url:
-            if (url.info()["Content-Type"] == "image/jpeg" or url.info()["Content-Type"] == "image/gif"):
-                f = io.BytesIO(url.read())
-                img = Image.open(f)
-                assets["Filesize"] = url.info()["Content-Length"]
-                assets["Dimensions"] = img.size
-    except urllib.error.URLError as e:
-        print(URL + " " +e.reason)
-
-    assets["URL"] = URL
-    assets["ProjectionType"] = "Tan"
-    return assets
+    resource["URL"] = URL
+    resource["ProjectionType"] = "Tan"
+    return resource
 
 #############################################################################################################
 # Method: main()                                                                                            #
@@ -136,32 +149,35 @@ def getResouceThumbnail(data, dt):
 #############################################################################################################
 def main():
 
-        # get the newest element
-        webUrl = urllib.request.urlopen("https://api.nasa.gov/planetary/apod?api_key=vG9rkcvYOMDKqpaVsNFSAtxwDUx376rKiQbLNIqy&date=" + str(date.today()))
-        new_data = json.loads(webUrl.read().decode())
+    #Go to https://api.nasa.gov/#live_example to apply for a NASA API key and enter it here:
+    api_key = "CHANGE_ME"
 
-        #read
-        f = open('jsonData.json', 'r+')
+    # get the newest element
+    webUrl = urllib.request.urlopen("https://api.nasa.gov/planetary/apod?api_key="+api_key+"&hd=true&date=" + str(date.today()))
+    new_data = json.loads(webUrl.read().decode())
 
-        #load JSON list into data
-        data = json.load(f)
+    #read
+    f = open('apod_v2.json', 'r+')
 
-        length = len(data["Collections"][0]["Assets"]) - 1
+    #load JSON list into data
+    data = json.load(f)
 
-        # If the title of the new_data and data are the same then just return
-        if(new_data["title"] == data["Collections"][0]["Assets"][length]["Title"]):
-            return
-        else:
-            #delete oldest JSON in the list
-            data = deleteOldJSON(data)
+    length = len(data["Collections"]) - 1
 
-            #add newest JSON element into the list
-            data["Collections"][0]["Assets"].append(addNew())
+    # If the title of the new_data and data are the same then just return
+    if(new_data["title"] == data["Collections"][length]["Title"]):
+        return
+    else:
+        #delete oldest JSON in the list
+        data = deleteOldJSON(data)
 
-            #earse everything from the file and write the newist data
-            f.seek(0)
-            json.dump(data, f)
-            f.truncate()
+        #add newest JSON element into the list
+        data["Collections"].append(addNew(api_key))
+
+        #erase everything from the file and write the new data
+        f.seek(0)
+        json.dump(data, f)
+        f.truncate()
 
 #Run the main program
 if __name__ == "__main__":
