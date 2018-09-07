@@ -6,7 +6,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 
 #open browser
-driver = selenium.webdriver.Firefox()
+driver = selenium.webdriver.Firefox(executable_path=r'./geckodriver')
 
 #load url
 driver.get("https://www.nasa.gov/multimedia/imagegallery/iotd.html")
