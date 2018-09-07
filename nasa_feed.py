@@ -22,6 +22,7 @@ try:
     while i <= 15:
         driver.find_element_by_xpath('//*[@id="trending"]').click()
         i += 1
+        #slow down the load to insure button loads correctly
         time.sleep(1)
 finally:
     print(i)
