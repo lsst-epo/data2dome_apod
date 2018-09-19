@@ -5,8 +5,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
+import urllib.request
 import re
 import time
+import json
 
 #################################################################################
 # Author: Christian Soto                                                        #
@@ -18,39 +20,65 @@ import time
 #	   same directory or else it will return an error.			#
 #################################################################################
 
-#open browser
-driver = selenium.webdriver.Firefox(executable_path=r'./geckodriver')
+def get_json(url):
 
-#options = Options();
-url = "https://www.nasa.gov/multimedia/imagegallery/iotd.html"
-#load url
-driver.get(url)
+	#open url link
+	webURL = urllib.request.urlopen(url)
 
-#wait until the button loads to load more images
-#try:
-element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "trending")))
+	#parse the web page
+	soup = BeautifulSoup(webURL, 'html.parser')
 
-    	#once the button loads, click it 16 times
-#	i =0
-#	while i <= 15:
- #      		driver.find_element_by_xpath('//*[@id="trending"]').click()
-  #     		i += 1
-       		#slow down the load to insure button loads correctly
-   #    		time.sleep(1)
+	#load json script string into a JSON object we can use
+	new_data = json.loads(soup.script.string)
+	#print(new_data["@context"])
+	print(new_data["@graph"][0]["datePublished"])
+	print(new_data["@graph"][0]["image"]["url"])
+	print(new_data["@graph"][0]["author"]["name"])
+	print(new_data["@graph"][0]["headline"])
 
-	#click on the first image
-#	time.sleep(1)
-#	images = driver.find_elements_by_tag_name('img')
+def main():
+	#open browser
+	driver = selenium.webdriver.Firefox(executable_path=r'./geckodriver')
 
-#	print(driver.find_elements_by_xpath("ember")
+	#options = Options();
+	url = "https://www.nasa.gov/multimedia/imagegallery/iotd.html"
+	#load url
+	driver.get(url)
 
-	#for image in images:
-	#	print(image.get_attribute('src'))
+	#wait until the button loads to load more images
+	#try:
+	element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "trending")))
 
-driver.find_element_by_class_name('gallery-card:first-child').click()
-#//soupHandler = BeautifulSoup(driver.page_source, 'lxml')
-#find all ember id tags
-#print(soupHandler.findAll(id='ember1212'))
-#print(soupHandler.id)
-#except:
- #  	print("Some kind of error exception")
+    		#once the button loads, click it 16 times
+	#	i =0
+	#	while i <= 15:
+ 	#      		driver.find_element_by_xpath('//*[@id="trending"]').click()
+  	#     		i += 1
+       			#slow down the load to insure button loads correctly
+   	#    		time.sleep(1)
+
+		#click on the first image
+	#	time.sleep(1)
+	#	images = driver.find_elements_by_tag_name('img')
+
+	#	print(driver.find_elements_by_xpath("ember")
+
+		#for image in images:
+		#	print(image.get_attribute('src'))
+
+	#click on the first card or picture
+	driver.find_element_by_class_name('gallery-card:first-child').click()
+
+	#get the hreh link for current page
+	date_url = driver.find_element_by_partial_link_text('View Image')
+
+	#print(date_url.get_attribute("href"))
+	get_json(date_url.get_attribute("href"))
+
+	#except:
+ 	#  	print("Some kind of error exception")
+
+	driver.close()
+#Run main
+#if __name__ == " main ":
+main()
