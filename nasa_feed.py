@@ -47,7 +47,7 @@ element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID,
 	#for image in images:
 	#	print(image.get_attribute('src'))
 
-driver.find_element_by_class_name('ember-view gallery-card:first-child')
+driver.find_element_by_class_name('gallery-card:first-child').click()
 #//soupHandler = BeautifulSoup(driver.page_source, 'lxml')
 #find all ember id tags
 #print(soupHandler.findAll(id='ember1212'))
