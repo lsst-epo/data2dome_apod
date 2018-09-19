@@ -4,7 +4,7 @@
 # Email: cjsoto@lsst.org or christian.j.sotoparra@gmail.com                                                 #
 # Purpose: The purpose of this program is to first collect the newist feed of the apod website, erase the   #
 #          oldest feed from the file jsonData.json, and then adds the newist the feed to the JSON           #
-#          collections list, which will then write to the file.  There are no known bugs as of now.         #                                                        #
+#          collections list, which will then write to the file.  There are no known bugs as of now.         #
 #############################################################################################################
 
 # modules needed to process internet, json data, and dates
