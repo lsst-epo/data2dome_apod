@@ -5,6 +5,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
+from datetime import date
 import urllib.request
 import re
 import time
@@ -20,7 +21,7 @@ import json
 #	   same directory or else it will return an error.			#
 #################################################################################
 
-def get_json(url):
+def get_json(url, collection):
 
 	#open url link
 	webURL = urllib.request.urlopen(url)
@@ -30,22 +31,56 @@ def get_json(url):
 
 	#load json script string into a JSON object we can use
 	new_data = json.loads(soup.script.string)
-	#print(new_data["@context"])
-	print(new_data["@graph"][0]["datePublished"])
-	print(new_data["@graph"][0]["image"]["url"])
-	print(new_data["@graph"][0]["author"]["name"])
-	print(new_data["@graph"][0]["headline"])
 
-def main():
+	#print(soup.prettify())
+	collection["PublicationDate"] = new_data["@graph"][0]["datePublished"]
+	collection["Title"] = new_data["@graph"][0]["headline"]
+	collection["Credit"] = new_data["@graph"][0]["author"]["name"]
+
+def getCollections():
+
+	#counter for tallying collections
+	counter = 0;
+
+	#list to store all the JSON data of collections.
+	collections = []
+
+	#collection object
+	collection = {}
+	collection["Creator"] = "Nasa image of the Day"
+	collection["URL"] = "https://nasa.gov"
+	#collection["ReferenceURL"] = "https://nasa.gov/multimedia/imagegallery/iotd.html"
+
+	#new dictionary for contact information
+	contact_JSON = {}
+	contact_JSON["Name"] ="Robert Nemiroff"
+	contact_JSON["Email"] = "nemiroff@mtu.edu"
+	contact_JSON["Telephone"] = "1-906-487-2198"
+	contact_JSON["Address"] = "1400 Townsend Drive"
+	contact_JSON["City"] = "Houghton"
+	contact_JSON["StateProvince"] = "Michigan"
+	contact_JSON["PostalCode"] = "49931"
+	contact_JSON["Country"] = "USA"
+
+	#add contact_JSON object to collection Object
+	collection["Contact"] = contact_JSON
+
+	#List to store all the JSON data of Assets
+	#asset={}
+
 	#open browser
 	driver = selenium.webdriver.Firefox(executable_path=r'./geckodriver')
 
 	#options = Options();
 	url = "https://www.nasa.gov/multimedia/imagegallery/iotd.html"
+
+	#add url to collection object
+	collection["ReferenceURL"] = url
+
 	#load url
 	driver.get(url)
 
-	#wait until the button loads to load more images
+	#Yamini Maddelawait until the button loads to load more images
 	#try:
 	element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "trending")))
 
@@ -57,28 +92,43 @@ def main():
        			#slow down the load to insure button loads correctly
    	#    		time.sleep(1)
 
-		#click on the first image
-	#	time.sleep(1)
-	#	images = driver.find_elements_by_tag_name('img')
-
-	#	print(driver.find_elements_by_xpath("ember")
-
-		#for image in images:
-		#	print(image.get_attribute('src'))
-
 	#click on the first card or picture
 	driver.find_element_by_class_name('gallery-card:first-child').click()
 
 	#get the hreh link for current page
 	date_url = driver.find_element_by_partial_link_text('View Image')
+	description = driver.find_element_by_tag_name('p')
+	collection["Description"] = description.text
 
-	#print(date_url.get_attribute("href"))
-	get_json(date_url.get_attribute("href"))
+	#get the rest of the image collection
+	get_json(date_url.get_attribute("href"), collection)
 
 	#except:
  	#  	print("Some kind of error exception")
 
 	driver.close()
+
+	return{"collections":collections, "count":counter}
+
+def main():
+
+    #This dictionary will collect all the JSON data and stored here
+    main_JSON = {}
+
+    #Get APOD data for last 365 days
+    nasa_data = getCollections()
+
+    #This list will collect contact information and assets
+    #main_JSON["Collections"] = nasa_data["collections"]
+
+    #Number sources where JSON was collected
+    #main_JSON["Count"] = nasa_data["count"]
+
+    #This creates a new file where JSON data will be stored
+   # with open("apod_v2.json", "w+") as outfile:
+    #   json.dump(main_JSON, outfile)
+
 #Run main
-#if __name__ == " main ":
-main()
+if __name__ == "__main__":
+    main()
+
